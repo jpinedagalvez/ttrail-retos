@@ -10,13 +10,13 @@ const season=2027;
 const notify=(msg)=>{$('ttrailAuthStatus').textContent=msg};
 const safe=(x)=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function refresh(){
- const {data:{user},error}=await sb.auth.getUser();current=error?null:user;athlete=null;
+ const {data:{user},error}=await sb.auth.getUser();current=error?null:user;athlete=null;window.ttrailIsAdmin=false;
  $('ttrailLogin').hidden=!!current;$('ttrailLogged').hidden=!current;
  if(!current){$('adminp').hidden=true; $('ttrailAnnualScores').textContent='Accede para consultar la clasificación.';$('ttrailMonthlyScores').textContent='Accede para consultar la clasificación.';$('homeGreeting').textContent='Accede con tu email para ver tus posiciones, puntos y participaciones.';$('adminNavBtn')?.style.setProperty('display','none');return;}
  $('ttrailEmailShown').textContent=current.email||'Atleta';
  const p=await sb.from('ttrail_athletes').select('display_name,role,tcenter_enabled').eq('id',current.id).maybeSingle();
  if(p.error){notify('No se pudo leer el perfil: '+p.error.message);return;}
- athlete=p.data;
+ athlete=p.data;window.ttrailIsAdmin=athlete?.role==='admin';
  $('homeGreeting').textContent=athlete?'Hola, '+athlete.display_name+'. Tu temporada TTRAIL.':'Tu cuenta está activa. Un administrador debe darte de alta como atleta.';
  $('adminNavBtn')?.style.setProperty('display',athlete?.role==='admin'?'':'none');
  $('adminp').hidden=athlete?.role!=='admin';
