@@ -5,12 +5,14 @@ const KEY='sb_publishable_8o54ll-FIQvptpPZusN5yw_Js7GJQMH';
 const api=window.supabase;
 if(!api){document.getElementById('ttrailAuthStatus').textContent='No se pudo cargar la conexión. Recarga la página.';return;}
 const sb=api.createClient(URL,KEY),$=id=>document.getElementById(id);
+window.ttrailDb=sb;
 let current=null,athlete=null;
 const season=2027;
 const notify=(msg)=>{$('ttrailAuthStatus').textContent=msg};
 const safe=(x)=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function refresh(){
  const {data:{user},error}=await sb.auth.getUser();current=error?null:user;athlete=null;window.ttrailIsAdmin=false;
+ $('t27Nav').style.display=current?'':'none';$('t27MobileNav').style.display=current?'':'none';
  $('ttrailLogin').hidden=!!current;$('ttrailLogged').hidden=!current;
  if(!current){$('adminp').hidden=true; $('ttrailAnnualScores').textContent='Accede para consultar la clasificación.';$('ttrailMonthlyScores').textContent='Accede para consultar la clasificación.';$('homeGreeting').textContent='Accede con tu email para ver tus posiciones, puntos y participaciones.';$('adminNavBtn')?.style.setProperty('display','none');return;}
  $('ttrailEmailShown').textContent=current.email||'Atleta';
