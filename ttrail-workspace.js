@@ -20,8 +20,10 @@ async function load(){
  el('t27Admin').hidden=profile?.role!=='admin';
  el('t27Athlete').hidden=!profile;
  el('t27EventSubmit').hidden=!profile?.tcenter_enabled;
- await Promise.all([loadChallenges(),loadEvents(),loadOwn()]);
- if(profile?.role==='admin')await Promise.all([loadAthletes(),loadReviews()]);
+ await loadAthletes();
+ await Promise.all([loadChallenges(),loadEvents()]);
+ await loadOwn();
+ if(profile?.role==='admin')await loadReviews();
 }
 async function loadAthletes(){
  const {data,error}=await sb.from('ttrail_athletes').select('id,display_name,sex,season_size,tcenter_enabled,role').order('display_name');
@@ -95,16 +97,16 @@ async function submit(form,tableName,payload,after){
  form.reset();msg('Guardado correctamente.');if(after)await after();
 }
 el('t27NewAthlete').onsubmit=async ev=>{
- ev.preventDefault();const f=ev.target, email=f.email.value.trim().toLowerCase();
- const {data,error}=await sb.rpc('ttrail_admin_register_existing_user',{p_email:email,p_name:f.display_name.value.trim(),p_sex:f.sex.value,p_size:f.season_size.value,p_tcenter:f.tcenter_enabled.checked,p_role:f.role.value});
+ ev.preventDefault();const f=ev.target, email=f.elements.namedItem('email').value.trim().toLowerCase();
+ const {data,error}=await sb.rpc('ttrail_admin_register_existing_user',{p_email:email,p_name:f.elements.namedItem('display_name').value.trim(),p_sex:f.elements.namedItem('sex').value,p_size:f.elements.namedItem('season_size').value,p_tcenter:f.elements.namedItem('tcenter_enabled').checked,p_role:f.elements.namedItem('role').value});
  if(error)return msg(error.message,true);
  msg(data?'Atleta actualizado.':'No se encontró una cuenta de acceso para ese email. Primero debe existir en Supabase Auth.');
  if(data){f.reset();await loadAthletes();}
 };
-el('t27NewChallenge').onsubmit=async ev=>{ev.preventDefault();const f=ev.target;const month=Number(f.month.value),published_at=new Date(Date.UTC(2027,month-1,1,0,0)).toISOString();await submit(f,'ttrail_challenges',{season:2027,month,title:f.title.value.trim(),description:f.description.value.trim(),metric:f.metric.value,published_at},loadChallenges)};
-el('t27NewEvent').onsubmit=async ev=>{ev.preventDefault();const f=ev.target;await submit(f,'ttrail_events',{event_date:f.event_date.value,title:f.title.value.trim(),kind:f.kind.value,official:f.official.checked},loadEvents)};
-el('t27NewResult').onsubmit=async ev=>{ev.preventDefault();const f=ev.target;await submit(f,'ttrail_challenge_entries',{athlete_id:state.user.id,challenge_id:f.challenge_id.value,mark:Number(f.mark.value),evidence_url:f.evidence_url.value.trim()||null},loadOwn)};
-el('t27NewEventEntry').onsubmit=async ev=>{ev.preventDefault();const f=ev.target;const e=state.events.find(x=>x.id===f.event_id.value);if(!e)return msg('Selecciona un evento oficial.',true);await submit(f,'ttrail_tc_entries',{athlete_id:state.user.id,event_id:e.id,activity_date:e.event_date,kind:e.kind,evidence_url:f.evidence_url.value.trim()||null},loadOwn)};
+el('t27NewChallenge').onsubmit=async ev=>{ev.preventDefault();const f=ev.target;const month=Number(f.elements.namedItem('month').value),published_at=new Date(Date.UTC(2027,month-1,1,0,0)).toISOString();await submit(f,'ttrail_challenges',{season:2027,month,title:f.elements.namedItem('title').value.trim(),description:f.elements.namedItem('description').value.trim(),metric:f.elements.namedItem('metric').value,published_at},loadChallenges)};
+el('t27NewEvent').onsubmit=async ev=>{ev.preventDefault();const f=ev.target;await submit(f,'ttrail_events',{event_date:f.elements.namedItem('event_date').value,title:f.elements.namedItem('title').value.trim(),kind:f.elements.namedItem('kind').value,official:f.elements.namedItem('official').checked},loadEvents)};
+el('t27NewResult').onsubmit=async ev=>{ev.preventDefault();const f=ev.target;await submit(f,'ttrail_challenge_entries',{athlete_id:state.user.id,challenge_id:f.elements.namedItem('challenge_id').value,mark:Number(f.elements.namedItem('mark').value),evidence_url:f.elements.namedItem('evidence_url').value.trim()||null},loadOwn)};
+el('t27NewEventEntry').onsubmit=async ev=>{ev.preventDefault();const f=ev.target;const e=state.events.find(x=>x.id===f.elements.namedItem('event_id').value);if(!e)return msg('Selecciona un evento oficial.',true);await submit(f,'ttrail_tc_entries',{athlete_id:state.user.id,event_id:e.id,activity_date:e.event_date,kind:e.kind,evidence_url:f.elements.namedItem('evidence_url').value.trim()||null},loadOwn)};
 el('t27RankChallenge').onchange=loadChallengeRanking;el('t27RankSize').onchange=loadChallengeRanking;el('t27RankSex').onchange=loadChallengeRanking;
 window.ttrailWorkspaceRefresh=load;
 sb.auth.onAuthStateChange(()=>setTimeout(load,0));load();
